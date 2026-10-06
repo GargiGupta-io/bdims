@@ -1,0 +1,29 @@
+# Secrets. Never commit these.
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Hardhat build output
+cache/
+artifacts/
+typechain-types/
+
+# Coverage
+coverage/
+coverage.json
+
+# Local deployments (Sepolia manifest IS committed, the frontend reads it)
+deployments/localhost.json
+deployments/hardhat.json
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# OS / editor
+.DS_Store
+.vscode/*
+!.vscode/extensions.json

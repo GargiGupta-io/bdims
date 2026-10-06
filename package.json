@@ -1,0 +1,28 @@
+{
+  "name": "bdims",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Blockchain-Based Drug Inventory Management System. Blockchain Technology DSE 4408, Manipal Institute of Technology.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "compile": "hardhat --config hardhat.config.js compile",
+    "test": "hardhat --config hardhat.config.js test",
+    "coverage": "hardhat --config hardhat.config.js coverage",
+    "node": "hardhat --config hardhat.config.js node",
+    "deploy:local": "hardhat --config hardhat.config.js run scripts/deploy.js --network localhost",
+    "deploy:sepolia": "hardhat --config hardhat.config.js run scripts/deploy.js --network sepolia",
+    "clean": "hardhat --config hardhat.config.js clean"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "dotenv": "^16.6.1",
+    "hardhat": "^2.29.1",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.6.1"
+  }
+}

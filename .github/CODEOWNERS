@@ -1,0 +1,8 @@
+# Gargi is automatically requested as reviewer on any PR touching these.
+# The interfaces are the agreement between all three contracts, so nobody
+# changes them without the architect seeing it.
+/contracts/interfaces/  @GargiGupta-io
+/contracts/libraries/   @GargiGupta-io
+/hardhat.config.js      @GargiGupta-io
+/package.json           @GargiGupta-io
+/.github/               @GargiGupta-io
