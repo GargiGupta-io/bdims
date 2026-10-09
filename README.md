@@ -36,6 +36,8 @@ Hardhat chain with 20 accounts holding 10,000 fake ETH each.
 | Khush Patel | Smart Contract Developer, Registry | `contracts/DrugRegistry.sol`, `test/registry.test.js` |
 | Pranav Arora | Smart Contract Developer, Supply Chain | `contracts/SupplyChain.sol`, `test/supplychain.test.js` |
 | Ronit Rao | Smart Contract Developer, Inventory | `contracts/InventoryManager.sol`, `test/inventory.test.js` |
+| Tarun Harish | Benchmarking Lead (Hyperledger Caliper) | `caliper/` |
+| Sahil Vats | Benchmarking, supporting Tarun | `caliper/` |
 
 **Your interface file is your spec.** Every function, event, error, struct
 and revert condition is written in `contracts/interfaces/I<YourContract>.sol`.
@@ -128,6 +130,46 @@ These tighten the design in synopsis §7. The interfaces are the final word.
    never hold stock.
 
 ---
+
+## Benchmarking with Hyperledger Caliper (Tarun, Sahil)
+
+Caliper fires hundreds of transactions at the contracts and reports
+transactions per second, latency and failures. It is the evidence for the
+synopsis outcome "transactions confirm within the normal block interval".
+It lives in `caliper/` with its own dependencies (Caliper 0.6.0, the last
+release with an Ethereum connector, plus web3 1.3.0), so it never clashes
+with Hardhat.
+
+```bash
+cd caliper && npm install        # once
+npm run node                     # repo root, terminal 1: local chain
+cd caliper && npm run setup      # terminal 2: deploy, fund workers, write config
+npm run bench                    # run the rounds; report in caliper/reports/report.html
+```
+
+**Why setup exists.** Caliper normally deploys contracts itself, but only
+with no constructor arguments and no wiring between contracts. Ours need
+both. So `setup` deploys with our own script, funds one account per Caliper
+worker (shared accounts make nonces collide), writes the addresses and ABIs
+into `networks/localhost.json`, and Caliper runs with deployment skipped.
+It also switches the node from instant blocks to a fixed block time
+(2 s by default; `BLOCK_TIME_MS=12000 npm run setup` matches Sepolia and is
+the setting for the final report).
+
+**Right now** it benchmarks a temporary placeholder pair
+(`contracts/probe/`) that copies the awkward parts of the real design.
+Pipeline verified: 200/200 writes at 1.0 s average latency, 1000/1000 reads.
+
+**When the real contracts land:**
+
+1. In `caliper/scripts/setup.js`, fill in the `bdims` target: register each
+   worker address with the role its round needs, and set gas limits.
+2. Copy `benchmarks/probe.yaml` to `benchmarks/bdims.yaml` with rounds for
+   `registerBatch`, `transferCustody` + `acceptConsignment`, `dispenseDrug`,
+   `flagRecall`, `getBatchDetails` and `getCustodyHistory`, one workload file
+   each in `workloads/bdims/`.
+3. Run `BENCH_TARGET=bdims npm run setup`, then the bench against `bdims.yaml`.
+4. Delete `contracts/probe/` and the probe files.
 
 ## Deployment (Gargi)
 

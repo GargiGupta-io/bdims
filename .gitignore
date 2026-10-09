@@ -16,7 +16,7 @@ coverage/
 coverage.json
 
 # Local deployments (Sepolia manifest IS committed, the frontend reads it)
-deployments/localhost.json
+deployments/localhost*.json
 deployments/hardhat.json
 
 # Frontend
@@ -27,3 +27,9 @@ frontend/dist/
 .DS_Store
 .vscode/*
 !.vscode/extensions.json
+
+# Caliper: generated per run
+caliper/networks/localhost.json
+caliper/reports/
+caliper/caliper.log
+caliper/log/

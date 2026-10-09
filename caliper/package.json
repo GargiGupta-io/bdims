@@ -1,0 +1,15 @@
+{
+  "name": "bdims-caliper",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hyperledger Caliper benchmarks for the BDIMS contracts.",
+  "license": "MIT",
+  "dependencies": {
+    "@hyperledger/caliper-cli": "0.6.0",
+    "web3": "1.3.0"
+  },
+  "scripts": {
+    "setup": "node scripts/setup.js",
+    "bench": "caliper launch manager --caliper-workspace . --caliper-networkconfig networks/localhost.json --caliper-benchconfig benchmarks/probe.yaml --caliper-flow-skip-install --caliper-report-path reports/report.html"
+  }
+}
