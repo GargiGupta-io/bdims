@@ -25,7 +25,7 @@ async function main() {
 
   // 1. Registry first. No dependencies. Deployer becomes the admin.
   const registry = await ethers.deployContract("DrugRegistry", [deployer.address]);
-  await registry.waitForDeployment();
+  const registryReceipt = await registry.deploymentTransaction().wait();
   const registryAddr = await registry.getAddress();
   console.log(`DrugRegistry      ${registryAddr}`);
 
@@ -53,6 +53,8 @@ async function main() {
     network: network.name,
     chainId: Number(chainId),
     deployedAt: new Date().toISOString(),
+    // The frontend reads events from this block onward, not from genesis.
+    deployedBlock: registryReceipt.blockNumber,
     deployer: deployer.address,
     contracts: {
       DrugRegistry: registryAddr,

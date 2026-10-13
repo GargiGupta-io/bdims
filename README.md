@@ -173,6 +173,34 @@ Pipeline verified: 200/200 writes at 1.0 s average latency, 1000/1000 reads.
 3. Run `BENCH_TARGET=bdims npm run setup`, then the bench against `bdims.yaml`.
 4. Delete `contracts/probe/` and the probe files.
 
+## Frontend (Gargi)
+
+React 18 + Vite + Tailwind, talking to the contracts through Ethers.js. It
+uses **only the interface ABIs** (`frontend/src/abi/`, copied by
+`npm run sync-abi`), so it works with any implementation of them, and it
+reads contract addresses from `deployments/<network>.json`.
+
+What you see depends on the role the registry gives your wallet address.
+Built so far: the **manufacturer dashboard** (register batches, live stock,
+dispatch, cancel transfers in transit, custody trail, recall). The other
+roles show what's coming.
+
+Run it locally:
+
+```bash
+npm run node                     # terminal 1: local chain
+npm run deploy:local             # terminal 2: deploy the contracts
+npm run seed:local               # demo participants, batches and transfers
+cd frontend && npm install && npm run dev
+```
+
+Open the printed address. On the local chain you can pick **"act as a local
+test account"** (no wallet needed), or connect MetaMask: add the network
+`http://127.0.0.1:8545`, chain ID 31337, and import a key printed by
+`npm run node`. `scripts/seed.js` lists which account plays which role.
+If MetaMask complains about nonces after restarting the node, use
+Settings → Advanced → Clear activity tab data.
+
 ## Deployment (Gargi)
 
 ```bash
