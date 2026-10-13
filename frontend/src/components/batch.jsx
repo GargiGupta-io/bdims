@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useTx } from "../hooks/useTx.js";
 import { ROLES, roleLabel } from "../lib/roles.js";
 import { shortAddr, toDate, units } from "../lib/format.js";
-import { Button, Card, Field, Modal, TxStatus, inputClass } from "./ui.jsx";
+import { Badge, Button, Card, Field, Modal, TxStatus, inputClass } from "./ui.jsx";
+import { batchStatus } from "../lib/ledger.js";
 
 // Batch pieces shared by the manufacturer, distributor and pharmacy dashboards.
 
@@ -188,5 +189,48 @@ function RejectModal({ item, nameOf, supply, onClose, onDone }) {
         <TxStatus state={tx.state} />
       </form>
     </Modal>
+  );
+}
+
+// Batches someone holds, soonest expiry first. Each role passes its own buttons.
+export function StockTable({ rows, nameOf, actions, empty = "You don't hold any stock yet." }) {
+  if (rows.length === 0) return <p className="text-sm text-slate-500">{empty}</p>;
+  return (
+    <div className="-mx-5 -my-5 overflow-x-auto">
+      <table className="w-full text-left text-sm">
+        <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+          <tr>
+            <th className="px-5 py-3 font-medium">Batch</th>
+            <th className="px-3 py-3 font-medium">Drug</th>
+            <th className="whitespace-nowrap px-3 py-3 text-right font-medium">In stock</th>
+            <th className="px-3 py-3 font-medium">Expiry</th>
+            <th className="px-3 py-3 font-medium">Status</th>
+            <th className="px-5 py-3 text-right font-medium">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-100">
+          {rows.map((b) => {
+            const status = batchStatus(b);
+            return (
+              <tr key={b.id} className="align-top">
+                <td className="px-5 py-3 font-mono text-xs text-slate-600">#{b.id.toString()}</td>
+                <td className="px-3 py-3">
+                  <p className="font-medium">{b.drugName}</p>
+                  <p className="text-xs text-slate-500">Made by {nameOf(b.manufacturer)}</p>
+                </td>
+                <td className="px-3 py-3 text-right tabular-nums">{units(b.stock)}</td>
+                <td className="whitespace-nowrap px-3 py-3">{toDate(b.expiryDate)}</td>
+                <td className="px-3 py-3">
+                  <Badge tone={status.tone}>{status.label}</Badge>
+                </td>
+                <td className="px-5 py-3">
+                  <div className="flex justify-end gap-1.5">{actions(b, status)}</div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }
