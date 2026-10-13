@@ -2,6 +2,17 @@
 
 **Deadline: Sunday 18 October.** Contract, tests and a merged pull request.
 
+| Quick reference | |
+|---|---|
+| Branch | `feat/supplychain` |
+| You create | `contracts/SupplyChain.sol`, `test/supplychain.test.js` |
+| Spec (source of truth) | `contracts/interfaces/ISupplyChain.sol` |
+| Contract header | `SupplyChain is ISupplyChain, ReentrancyGuard` |
+| Constructor | `constructor(address registry_)` |
+| Mocks to test with | `MockRegistryForSupplyChain`, `MockInventoryForSupplyChain` in `contracts/mocks/` |
+| Done | compiles with no warnings, every test in this guide's test table passes, 90%+ coverage, PR merged |
+| Using Claude or another AI assistant? | Open the repo root so it reads `CLAUDE.md`, then point it at this guide |
+
 You're building the heart of the system: **every handoff of a batch from one
 party to another**. When a regulator asks "where has this batch been?", the
 answer is your custody trail. When anyone tries an illegal move (a pharmacy

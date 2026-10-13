@@ -2,6 +2,17 @@
 
 **Deadline: Sunday 18 October.** Contract, tests and a merged pull request.
 
+| Quick reference | |
+|---|---|
+| Branch | `feat/inventory` |
+| You create | `contracts/InventoryManager.sol`, `test/inventory.test.js` |
+| Spec (source of truth) | `contracts/interfaces/IInventoryManager.sol` |
+| Contract header | `InventoryManager is IInventoryManager, ReentrancyGuard` |
+| Constructor | `constructor(address registry_, address supplyChain_)` |
+| Mocks to test with | `MockRegistryForInventory` (plus a test account as `supplyChain`) in `contracts/mocks/` |
+| Done | compiles with no warnings, every test in this guide's test table passes, 90%+ coverage, PR merged |
+| Using Claude or another AI assistant? | Open the repo root so it reads `CLAUDE.md`, then point it at this guide |
+
 You're building **the project's headline feature: recall**. One call to your
 `flagRecall` must freeze a batch across the whole network in a single
 transaction, and tell everyone exactly which facilities still hold it. Your

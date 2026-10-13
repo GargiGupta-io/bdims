@@ -2,6 +2,17 @@
 
 **Deadline: Sunday 18 October.** Contract, tests and a merged pull request.
 
+| Quick reference | |
+|---|---|
+| Branch | `feat/registry` |
+| You create | `contracts/DrugRegistry.sol`, `test/registry.test.js` |
+| Spec (source of truth) | `contracts/interfaces/IDrugRegistry.sol` |
+| Contract header | `DrugRegistry is IDrugRegistry, AccessControl, ReentrancyGuard` |
+| Constructor | `constructor(address admin)` |
+| Mocks to test with | `MockSupplyChainForRegistry` in `contracts/mocks/` |
+| Done | compiles with no warnings, every test in this guide's test table passes, 90%+ coverage, PR merged |
+| Using Claude or another AI assistant? | Open the repo root so it reads `CLAUDE.md`, then point it at this guide |
+
 You're building the contract the other two depend on. `DrugRegistry` answers two
 questions for the whole system: **who is allowed to take part**, and **what
 exactly is this batch**. Pranav's contract asks it "is this address registered,
