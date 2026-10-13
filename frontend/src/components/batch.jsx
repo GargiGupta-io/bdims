@@ -1,0 +1,117 @@
+import { useEffect, useState } from "react";
+import { useTx } from "../hooks/useTx.js";
+import { ROLES, roleLabel } from "../lib/roles.js";
+import { shortAddr, toDate, units } from "../lib/format.js";
+import { Button, Card, Field, Modal, TxStatus, inputClass } from "./ui.jsx";
+
+// Batch pieces shared by the manufacturer, distributor and pharmacy dashboards.
+
+export function InTransit({ items, nameOf, supply, onDone }) {
+  const tx = useTx(onDone);
+  return (
+    <Card title="In transit" subtitle="Dispatched consignments the recipient hasn't accepted yet. Cancel returns the stock to you.">
+      {items.length === 0 ? (
+        <p className="text-sm text-slate-500">Nothing in transit.</p>
+      ) : (
+        <ul className="divide-y divide-slate-100">
+          {items.map((t) => (
+            <li key={`${t.batchId}-${t.to}`} className="flex flex-wrap items-center justify-between gap-3 py-3">
+              <div className="text-sm">
+                <p className="font-medium">
+                  Batch #{t.batchId.toString()} · {units(t.quantity)} units → {nameOf(t.to)}
+                </p>
+                <p className="text-xs text-slate-500">
+                  {t.location} · sent {toDate(t.initiatedAt)}
+                </p>
+              </div>
+              <Button size="sm" variant="secondary" disabled={tx.busy} onClick={() => tx.run(`Cancel batch #${t.batchId}`, () => supply.cancelTransfer(t.batchId, t.to))}>
+                Cancel
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <TxStatus state={tx.state} />
+    </Card>
+  );
+}
+
+export function DispatchModal({ batch, participants, supply, self, verb = "Dispatch", onClose, onDone }) {
+  const recipients = Object.values(participants).filter(
+    (p) => p.active && (p.role === ROLES.DISTRIBUTOR || p.role === ROLES.PHARMACY) && p.address.toLowerCase() !== self?.toLowerCase()
+  );
+  const [to, setTo] = useState(recipients[0]?.address ?? "");
+  const [quantity, setQuantity] = useState("");
+  const [location, setLocation] = useState("");
+  const tx = useTx(() => {
+    onDone();
+    setTimeout(onClose, 900);
+  });
+
+  const submit = (e) => {
+    e.preventDefault();
+    tx.run(verb, () => supply.transferCustody(batch.id, to, BigInt(quantity || 0), location.trim()));
+  };
+
+  return (
+    <Modal title={`${verb} batch #${batch.id} · ${batch.drugName}`} onClose={onClose}>
+      <form onSubmit={submit} className="space-y-4">
+        <Field label="Recipient" hint="Stock can only go to a registered distributor or pharmacy.">
+          <select className={inputClass} value={to} onChange={(e) => setTo(e.target.value)} required>
+            {recipients.map((p) => (
+              <option key={p.address} value={p.address}>
+                {p.name} · {roleLabel(p.role)} ({shortAddr(p.address)})
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Quantity" hint={`You hold ${units(batch.stock)} units.`}>
+          <input type="number" min="1" max={batch.stock.toString()} step="1" className={inputClass} value={quantity} onChange={(e) => setQuantity(e.target.value)} required />
+        </Field>
+        <Field label="Route / location">
+          <input className={inputClass} value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Goa plant to Bengaluru hub" required />
+        </Field>
+        <p className="text-xs text-slate-500">The units leave your stock now and wait in escrow until the recipient accepts.</p>
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="secondary" onClick={onClose}>
+            Close
+          </Button>
+          <Button type="submit" disabled={tx.busy || !to}>
+            {tx.busy ? "Sending…" : verb}
+          </Button>
+        </div>
+        <TxStatus state={tx.state} />
+      </form>
+    </Modal>
+  );
+}
+
+export function TrailModal({ batch, supply, nameOf, onClose }) {
+  const [trail, setTrail] = useState(null);
+  useEffect(() => {
+    let live = true;
+    supply.getCustodyHistory(batch.id).then((t) => live && setTrail([...t])).catch(() => live && setTrail([]));
+    return () => { live = false; };
+  }, [batch.id, supply]);
+
+  return (
+    <Modal title={`Custody trail · batch #${batch.id}`} onClose={onClose}>
+      {!trail ? (
+        <p className="text-sm text-slate-500">Loading…</p>
+      ) : (
+        <ol className="relative space-y-4 border-l border-slate-200 pl-5">
+          {trail.map((r, i) => (
+            <li key={i} className="text-sm">
+              <span className="absolute -left-[5px] mt-1.5 h-2.5 w-2.5 rounded-full bg-teal-600" />
+              <p className="font-medium">{i === 0 ? `Manufactured by ${nameOf(r.to)}` : `${nameOf(r.from)} → ${nameOf(r.to)}`}</p>
+              <p className="text-xs text-slate-500">
+                {units(r.quantity)} units · {r.location} · {toDate(r.timestamp)}
+              </p>
+            </li>
+          ))}
+        </ol>
+      )}
+      <p className="mt-4 text-xs text-slate-500">Every entry is a confirmed, signed transaction. None can be edited or deleted.</p>
+    </Modal>
+  );
+}
