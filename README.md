@@ -98,9 +98,11 @@ Each contract stores the addresses of the others. Calls that change state
 (`initialiseCustody`, `updateStock`, `setBatchStatus`) only accept the one
 contract allowed to make them.
 
-**Testing your contract before the others exist:** write a small mock in
-`test/mocks/` that implements the interface you depend on, with hardcoded
-answers. Deploy the mock in your test, pass its address to your constructor.
+**Testing your contract before the others exist:** use the ready-made mocks
+in `contracts/mocks/` (they must live under `contracts/`, because that is the
+only folder Hardhat compiles). Each has only the functions your contract
+calls, plus setters to shape the test. Step-by-step guides for each
+developer are in `docs/guides/`.
 
 ---
 
