@@ -180,10 +180,16 @@ uses **only the interface ABIs** (`frontend/src/abi/`, copied by
 `npm run sync-abi`), so it works with any implementation of them, and it
 reads contract addresses from `deployments/<network>.json`.
 
-What you see depends on the role the registry gives your wallet address.
-Built so far: the **manufacturer dashboard** (register batches, live stock,
-dispatch, cancel transfers in transit, custody trail, recall). The other
-roles show what's coming.
+What you see depends on the role the registry gives your wallet address:
+
+| Screen | Who | What it does |
+|---|---|---|
+| Manufacturer | MANUFACTURER | Register batches, live stock, dispatch, cancel transfers in transit, custody trail, recall |
+| Distributor | DISTRIBUTOR | Accept or reject incoming consignments, forward stock, cancel transfers in transit, custody trail |
+| Pharmacy | PHARMACY | Accept or reject consignments, dispense, reorder levels, alerts for recalled, expiring and low stock, dispensing record |
+| Verify a medicine | Anyone, no wallet | Enter a batch number (or open `#/verify/<batch>`): genuine, not recognised, recalled or expired, with the custody trail |
+
+Regulator and admin screens are still to come.
 
 Run it locally:
 
