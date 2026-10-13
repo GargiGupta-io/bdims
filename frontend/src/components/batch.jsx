@@ -115,3 +115,78 @@ export function TrailModal({ batch, supply, nameOf, onClose }) {
     </Modal>
   );
 }
+
+// Consignments sent to me that I haven't accepted or rejected yet.
+// Accepting confirms physical receipt and moves the units into my stock.
+// Rejecting returns them to the sender and always works, even on a recalled batch.
+export function IncomingConsignments({ items, nameOf, supply, onDone }) {
+  const tx = useTx(onDone);
+  const [rejecting, setRejecting] = useState(null);
+  return (
+    <Card title="Incoming consignments" subtitle="Accept once the goods physically arrive. Reject sends them back to the sender.">
+      {items.length === 0 ? (
+        <p className="text-sm text-slate-500">Nothing waiting for you.</p>
+      ) : (
+        <ul className="divide-y divide-slate-100">
+          {items.map((t) => (
+            <li key={`${t.batchId}-${t.from}`} className="flex flex-wrap items-center justify-between gap-3 py-3">
+              <div className="text-sm">
+                <p className="font-medium">
+                  Batch #{t.batchId.toString()} · {units(t.quantity)} units from {nameOf(t.from)}
+                </p>
+                <p className="text-xs text-slate-500">
+                  {t.location} · sent {toDate(t.initiatedAt)}
+                </p>
+              </div>
+              <div className="flex gap-1.5">
+                <Button size="sm" variant="secondary" disabled={tx.busy} onClick={() => setRejecting(t)}>
+                  Reject
+                </Button>
+                <Button size="sm" disabled={tx.busy} onClick={() => tx.run(`Accept batch #${t.batchId}`, () => supply.acceptConsignment(t.batchId))}>
+                  Accept
+                </Button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      <TxStatus state={tx.state} />
+      {rejecting && <RejectModal item={rejecting} nameOf={nameOf} supply={supply} onClose={() => setRejecting(null)} onDone={onDone} />}
+    </Card>
+  );
+}
+
+function RejectModal({ item, nameOf, supply, onClose, onDone }) {
+  const [reason, setReason] = useState("");
+  const tx = useTx(() => {
+    onDone();
+    setTimeout(onClose, 900);
+  });
+  return (
+    <Modal title={`Reject batch #${item.batchId}`} onClose={onClose}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          tx.run("Reject", () => supply.rejectConsignment(item.batchId, reason.trim()));
+        }}
+        className="space-y-4"
+      >
+        <p className="text-sm text-slate-600">
+          {units(item.quantity)} units go back to {nameOf(item.from)}. The reason is recorded on chain.
+        </p>
+        <Field label="Reason">
+          <input className={inputClass} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Seal broken on arrival" required />
+        </Field>
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" variant="danger" disabled={tx.busy}>
+            {tx.busy ? "Rejecting…" : "Reject consignment"}
+          </Button>
+        </div>
+        <TxStatus state={tx.state} />
+      </form>
+    </Modal>
+  );
+}
