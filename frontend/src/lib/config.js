@@ -1,3 +1,5 @@
+import { JsonRpcProvider } from "ethers";
+
 // Networks the app knows, and where each one's contracts live.
 // Addresses come from ../deployments/<network>.json, written by the deploy
 // script, so nothing here changes when contracts are redeployed.
@@ -21,3 +23,19 @@ export const NETWORKS = {
 };
 
 export const hasLocalDeployment = Boolean(deployments[LOCAL_CHAIN_ID]);
+
+// Read-only access with no wallet, for the public verification page.
+// Sepolia uses a free public endpoint, never a private key-bearing URL:
+// anything in this file ships to every visitor's browser.
+const READ_RPC = {
+  [LOCAL_CHAIN_ID]: LOCAL_RPC,
+  [SEPOLIA_CHAIN_ID]: import.meta.env.VITE_SEPOLIA_READ_RPC || "https://ethereum-sepolia-rpc.publicnode.com",
+};
+
+// The network the public page reads: the live Sepolia deployment once it
+// exists, otherwise the local chain.
+export const PUBLIC_CHAIN_ID = deployments[SEPOLIA_CHAIN_ID] ? SEPOLIA_CHAIN_ID : LOCAL_CHAIN_ID;
+
+export function readProvider(chainId = PUBLIC_CHAIN_ID) {
+  return new JsonRpcProvider(READ_RPC[chainId], chainId, { staticNetwork: true });
+}
