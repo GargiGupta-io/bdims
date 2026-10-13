@@ -3,7 +3,7 @@ import { roleLabel } from "../lib/roles.js";
 import { shortAddr } from "../lib/format.js";
 import { Badge, Button } from "./ui.jsx";
 
-export default function Header({ wallet, profile }) {
+export default function Header({ wallet, profile, onVerifyPage }) {
   const network = NETWORKS[wallet.chainId];
   return (
     <header className="border-b border-slate-200 bg-white">
@@ -15,6 +15,10 @@ export default function Header({ wallet, profile }) {
             <p className="text-xs leading-tight text-slate-500">Drug Inventory Ledger</p>
           </div>
         </div>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <a href={onVerifyPage ? "#/" : "#/verify"} className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-teal-700 hover:bg-teal-50">
+            {onVerifyPage ? "Dashboard" : "Verify a medicine"}
+          </a>
         {wallet.status === "ready" && (
           <div className="flex items-center gap-2 sm:gap-3">
             <Badge tone={network ? "teal" : "red"}>{network?.short ?? `Chain ${wallet.chainId}`}</Badge>
@@ -30,6 +34,7 @@ export default function Header({ wallet, profile }) {
             </Button>
           </div>
         )}
+        </div>
       </div>
     </header>
   );

@@ -42,7 +42,15 @@ export default function ConnectScreen({ wallet }) {
         Manufacturers, distributors, pharmacies and regulators share one tamper-proof record of where each drug batch has been and who holds it now.
       </p>
 
-      <Card className="mt-8" title="Connect your wallet" subtitle="Your wallet address is your identity. The registry decides what you can do.">
+      <a href="#/verify" className="mt-6 flex items-center justify-between rounded-xl border border-teal-200 bg-teal-50 px-5 py-4 text-teal-900 hover:bg-teal-100">
+        <span>
+          <span className="block font-medium">Checking a medicine?</span>
+          <span className="block text-sm">Verify any batch without a wallet.</span>
+        </span>
+        <span aria-hidden>→</span>
+      </a>
+
+      <Card className="mt-6" title="Connect your wallet" subtitle="Your wallet address is your identity. The registry decides what you can do.">
         <Button onClick={wallet.connectMetaMask} disabled={wallet.status === "connecting"} className="w-full">
           {wallet.status === "connecting" ? "Waiting for MetaMask…" : "Connect MetaMask"}
         </Button>
