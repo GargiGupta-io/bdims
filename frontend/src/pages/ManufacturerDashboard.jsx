@@ -1,0 +1,340 @@
+import { useEffect, useMemo, useState } from "react";
+import { useManufacturerLedger } from "../hooks/useLedger.js";
+import { useTx } from "../hooks/useTx.js";
+import { ROLES, roleLabel } from "../lib/roles.js";
+import { dateInputToSeconds, daysUntil, shortAddr, toDate, todayInput, units } from "../lib/format.js";
+import { Badge, Button, Card, Field, Modal, Stat, TxStatus, inputClass } from "../components/ui.jsx";
+
+const EXPIRY_WARNING_DAYS = 30;
+
+function batchStatus(b) {
+  if (b.recalled) return { tone: "red", label: "Recalled" };
+  const days = daysUntil(b.expiryDate);
+  if (days <= 0) return { tone: "red", label: "Expired" };
+  if (days <= EXPIRY_WARNING_DAYS) return { tone: "amber", label: `Expires in ${days}d` };
+  return { tone: "green", label: "Active" };
+}
+
+export default function ManufacturerDashboard({ wallet, profile }) {
+  const ledger = useManufacturerLedger(wallet);
+  const [dispatching, setDispatching] = useState(null);
+  const [recalling, setRecalling] = useState(null);
+  const [tracing, setTracing] = useState(null);
+
+  const escrow = wallet.deployment.contracts.SupplyChain.toLowerCase();
+  const nameOf = (addr) => {
+    if (!addr || /^0x0+$/.test(addr)) return "Manufactured";
+    if (addr.toLowerCase() === escrow) return "In transit";
+    return ledger.participants[addr.toLowerCase()]?.name ?? shortAddr(addr);
+  };
+
+  const totals = useMemo(() => {
+    const inStock = ledger.batches.reduce((s, b) => s + b.stock, 0n);
+    const inTransit = ledger.inTransit.reduce((s, t) => s + t.quantity, 0n);
+    return { inStock, inTransit, recalled: ledger.batches.filter((b) => b.recalled).length };
+  }, [ledger.batches, ledger.inTransit]);
+
+  return (
+    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6">
+      <div>
+        <p className="text-sm font-medium text-teal-700">Manufacturer</p>
+        <h1 className="text-2xl font-semibold tracking-tight">{profile.name}</h1>
+        <p className="text-sm text-slate-500">Licence {profile.licenceId}</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Stat label="Batches registered" value={ledger.batches.length} />
+        <Stat label="Units in your stock" value={units(totals.inStock)} />
+        <Stat label="Units in transit" value={units(totals.inTransit)} hint="Dispatched, not yet accepted" />
+        <Stat label="Recalled batches" value={totals.recalled} />
+      </div>
+
+      {ledger.error && <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-800">Couldn't load the ledger: {ledger.error}</p>}
+
+      <Card title="Your batches" subtitle="Live from the chain. Updates on every new block.">
+        {ledger.loading ? (
+          <p className="text-sm text-slate-500">Loading…</p>
+        ) : ledger.batches.length === 0 ? (
+          <p className="text-sm text-slate-500">No batches yet. Register your first one below.</p>
+        ) : (
+          <BatchTable batches={ledger.batches} onDispatch={setDispatching} onRecall={setRecalling} onTrace={setTracing} />
+        )}
+      </Card>
+
+      <div className="grid items-start gap-6 lg:grid-cols-2">
+        <RegisterBatch registry={wallet.contracts.registry} onDone={ledger.reload} />
+        <InTransit items={ledger.inTransit} nameOf={nameOf} supply={wallet.contracts.supply} onDone={ledger.reload} />
+      </div>
+
+      {dispatching && (
+        <DispatchModal batch={dispatching} participants={ledger.participants} supply={wallet.contracts.supply} onClose={() => setDispatching(null)} onDone={ledger.reload} />
+      )}
+      {recalling && <RecallModal batch={recalling} inventory={wallet.contracts.inventory} nameOf={nameOf} onClose={() => setRecalling(null)} onDone={ledger.reload} />}
+      {tracing && <TrailModal batch={tracing} supply={wallet.contracts.supply} nameOf={nameOf} onClose={() => setTracing(null)} />}
+    </div>
+  );
+}
+
+function RegisterBatch({ registry, onDone }) {
+  const blank = { drugName: "", composition: "", mfgDate: todayInput(), expiryDate: "", quantity: "", ipfsHash: "" };
+  const [form, setForm] = useState(blank);
+  const tx = useTx(() => {
+    setForm(blank);
+    onDone();
+  });
+  const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+
+  const submit = (e) => {
+    e.preventDefault();
+    tx.run("Register batch", () =>
+      registry.registerBatch(
+        form.drugName.trim(),
+        form.composition.trim(),
+        dateInputToSeconds(form.mfgDate),
+        dateInputToSeconds(form.expiryDate),
+        BigInt(form.quantity || 0),
+        form.ipfsHash.trim()
+      )
+    );
+  };
+
+  return (
+    <Card title="Register a batch" subtitle="Gives the batch its permanent on-chain identity.">
+      <form onSubmit={submit} className="space-y-4">
+        <Field label="Drug name">
+          <input className={inputClass} value={form.drugName} onChange={set("drugName")} placeholder="Paracetamol 500mg" required />
+        </Field>
+        <Field label="Composition">
+          <input className={inputClass} value={form.composition} onChange={set("composition")} placeholder="Paracetamol IP 500 mg" />
+        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Manufactured">
+            <input type="date" className={inputClass} value={form.mfgDate} onChange={set("mfgDate")} required />
+          </Field>
+          <Field label="Expires">
+            <input type="date" className={inputClass} value={form.expiryDate} min={todayInput()} onChange={set("expiryDate")} required />
+          </Field>
+        </div>
+        <Field label="Quantity (units)">
+          <input type="number" min="1" step="1" className={inputClass} value={form.quantity} onChange={set("quantity")} placeholder="10000" required />
+        </Field>
+        <Field label="QA certificate (IPFS CID)" hint="Upload to IPFS comes next. For now, paste the certificate's CID.">
+          <input className={inputClass} value={form.ipfsHash} onChange={set("ipfsHash")} placeholder="bafkrei…" required />
+        </Field>
+        <Button type="submit" disabled={tx.busy} className="w-full">
+          {tx.busy ? "Registering…" : "Register batch"}
+        </Button>
+        <TxStatus state={tx.state} />
+      </form>
+    </Card>
+  );
+}
+
+function BatchTable({ batches, onDispatch, onRecall, onTrace }) {
+  return (
+    <div className="-mx-5 -my-5 overflow-x-auto">
+      <table className="w-full text-left text-sm">
+        <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+          <tr>
+            <th className="px-5 py-3 font-medium">Batch</th>
+            <th className="px-3 py-3 font-medium">Drug</th>
+            <th className="whitespace-nowrap px-3 py-3 text-right font-medium">In stock</th>
+            <th className="px-3 py-3 font-medium">Expiry</th>
+            <th className="px-3 py-3 font-medium">Status</th>
+            <th className="px-5 py-3 text-right font-medium">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-100">
+          {batches.map((b) => {
+            const status = batchStatus(b);
+            const frozen = b.recalled || daysUntil(b.expiryDate) <= 0;
+            return (
+              <tr key={b.id} className="align-top">
+                <td className="px-5 py-3 font-mono text-xs text-slate-600">#{b.id.toString()}</td>
+                <td className="px-3 py-3">
+                  <p className="font-medium">{b.drugName}</p>
+                  <p className="text-xs text-slate-500">
+                    {units(b.quantity)} produced · {b.holders.length} holder{b.holders.length === 1 ? "" : "s"}
+                  </p>
+                </td>
+                <td className="px-3 py-3 text-right tabular-nums">{units(b.stock)}</td>
+                <td className="px-3 py-3 whitespace-nowrap">{toDate(b.expiryDate)}</td>
+                <td className="px-3 py-3">
+                  <Badge tone={status.tone}>{status.label}</Badge>
+                </td>
+                <td className="px-5 py-3">
+                  <div className="flex justify-end gap-1.5">
+                    <Button size="sm" variant="secondary" onClick={() => onTrace(b)}>
+                      Trail
+                    </Button>
+                    <Button size="sm" onClick={() => onDispatch(b)} disabled={frozen || b.stock === 0n}>
+                      Dispatch
+                    </Button>
+                    <Button size="sm" variant="danger" onClick={() => onRecall(b)} disabled={b.recalled}>
+                      Recall
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function InTransit({ items, nameOf, supply, onDone }) {
+  const tx = useTx(onDone);
+  return (
+    <Card title="In transit" subtitle="Dispatched consignments the recipient hasn't accepted yet. Cancel returns the stock to you.">
+      {items.length === 0 ? (
+        <p className="text-sm text-slate-500">Nothing in transit.</p>
+      ) : (
+        <ul className="divide-y divide-slate-100">
+          {items.map((t) => (
+            <li key={`${t.batchId}-${t.to}`} className="flex flex-wrap items-center justify-between gap-3 py-3">
+              <div className="text-sm">
+                <p className="font-medium">
+                  Batch #{t.batchId.toString()} · {units(t.quantity)} units → {nameOf(t.to)}
+                </p>
+                <p className="text-xs text-slate-500">
+                  {t.location} · sent {toDate(t.initiatedAt)}
+                </p>
+              </div>
+              <Button size="sm" variant="secondary" disabled={tx.busy} onClick={() => tx.run(`Cancel batch #${t.batchId}`, () => supply.cancelTransfer(t.batchId, t.to))}>
+                Cancel
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <TxStatus state={tx.state} />
+    </Card>
+  );
+}
+
+function DispatchModal({ batch, participants, supply, onClose, onDone }) {
+  const recipients = Object.values(participants).filter((p) => p.active && (p.role === ROLES.DISTRIBUTOR || p.role === ROLES.PHARMACY));
+  const [to, setTo] = useState(recipients[0]?.address ?? "");
+  const [quantity, setQuantity] = useState("");
+  const [location, setLocation] = useState("");
+  const tx = useTx(() => {
+    onDone();
+    setTimeout(onClose, 900);
+  });
+
+  const submit = (e) => {
+    e.preventDefault();
+    tx.run("Dispatch", () => supply.transferCustody(batch.id, to, BigInt(quantity || 0), location.trim()));
+  };
+
+  return (
+    <Modal title={`Dispatch batch #${batch.id} · ${batch.drugName}`} onClose={onClose}>
+      <form onSubmit={submit} className="space-y-4">
+        <Field label="Recipient" hint="Stock can only go to a registered distributor or pharmacy.">
+          <select className={inputClass} value={to} onChange={(e) => setTo(e.target.value)} required>
+            {recipients.map((p) => (
+              <option key={p.address} value={p.address}>
+                {p.name} · {roleLabel(p.role)} ({shortAddr(p.address)})
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Quantity" hint={`You hold ${units(batch.stock)} units.`}>
+          <input type="number" min="1" max={batch.stock.toString()} step="1" className={inputClass} value={quantity} onChange={(e) => setQuantity(e.target.value)} required />
+        </Field>
+        <Field label="Route / location">
+          <input className={inputClass} value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Goa plant to Bengaluru hub" required />
+        </Field>
+        <p className="text-xs text-slate-500">The units leave your stock now and wait in escrow until the recipient accepts.</p>
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="secondary" onClick={onClose}>
+            Close
+          </Button>
+          <Button type="submit" disabled={tx.busy || !to}>
+            {tx.busy ? "Dispatching…" : "Dispatch"}
+          </Button>
+        </div>
+        <TxStatus state={tx.state} />
+      </form>
+    </Modal>
+  );
+}
+
+function RecallModal({ batch, inventory, nameOf, onClose, onDone }) {
+  const [reason, setReason] = useState("");
+  const tx = useTx(onDone);
+  return (
+    <Modal title={`Recall batch #${batch.id} · ${batch.drugName}`} onClose={onClose}>
+      {tx.state.status === "done" ? (
+        <div className="space-y-3 text-sm">
+          <p className="font-medium text-rose-700">Batch #{batch.id.toString()} is frozen across the network.</p>
+          <p className="text-slate-600">Nobody can transfer, accept or dispense it from block {tx.state.block}. These holders still have units and need to be contacted:</p>
+          <ul className="list-disc space-y-1 pl-5">
+            {batch.holders.map((h) => (
+              <li key={h}>{nameOf(h)}</li>
+            ))}
+          </ul>
+          <div className="flex justify-end">
+            <Button onClick={onClose}>Done</Button>
+          </div>
+        </div>
+      ) : (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            tx.run("Recall", () => inventory.flagRecall(batch.id, reason.trim()));
+          }}
+          className="space-y-4"
+        >
+          <p className="text-sm text-slate-600">
+            One transaction freezes this batch everywhere: no transfers, no acceptances, no dispensing. It <span className="font-medium">cannot be undone.</span>
+          </p>
+          <Field label="Reason">
+            <input className={inputClass} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Contamination found in QA retest" required />
+          </Field>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="secondary" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="danger" disabled={tx.busy}>
+              {tx.busy ? "Recalling…" : "Recall batch"}
+            </Button>
+          </div>
+          <TxStatus state={tx.state} />
+        </form>
+      )}
+    </Modal>
+  );
+}
+
+function TrailModal({ batch, supply, nameOf, onClose }) {
+  const [trail, setTrail] = useState(null);
+  useEffect(() => {
+    let live = true;
+    supply.getCustodyHistory(batch.id).then((t) => live && setTrail([...t])).catch(() => live && setTrail([]));
+    return () => { live = false; };
+  }, [batch.id, supply]);
+
+  return (
+    <Modal title={`Custody trail · batch #${batch.id}`} onClose={onClose}>
+      {!trail ? (
+        <p className="text-sm text-slate-500">Loading…</p>
+      ) : (
+        <ol className="relative space-y-4 border-l border-slate-200 pl-5">
+          {trail.map((r, i) => (
+            <li key={i} className="text-sm">
+              <span className="absolute -left-[5px] mt-1.5 h-2.5 w-2.5 rounded-full bg-teal-600" />
+              <p className="font-medium">{i === 0 ? `Manufactured by ${nameOf(r.to)}` : `${nameOf(r.from)} → ${nameOf(r.to)}`}</p>
+              <p className="text-xs text-slate-500">
+                {units(r.quantity)} units · {r.location} · {toDate(r.timestamp)}
+              </p>
+            </li>
+          ))}
+        </ol>
+      )}
+      <p className="mt-4 text-xs text-slate-500">Every entry is a confirmed, signed transaction. None can be edited or deleted.</p>
+    </Modal>
+  );
+}
