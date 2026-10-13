@@ -1,19 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useManufacturerLedger } from "../hooks/useLedger.js";
+import { batchStatus, makeNameOf } from "../lib/ledger.js";
 import { useTx } from "../hooks/useTx.js";
 import { ROLES, roleLabel } from "../lib/roles.js";
-import { dateInputToSeconds, daysUntil, shortAddr, toDate, todayInput, units } from "../lib/format.js";
+import { dateInputToSeconds, shortAddr, toDate, todayInput, units } from "../lib/format.js";
 import { Badge, Button, Card, Field, Modal, Stat, TxStatus, inputClass } from "../components/ui.jsx";
-
-const EXPIRY_WARNING_DAYS = 30;
-
-function batchStatus(b) {
-  if (b.recalled) return { tone: "red", label: "Recalled" };
-  const days = daysUntil(b.expiryDate);
-  if (days <= 0) return { tone: "red", label: "Expired" };
-  if (days <= EXPIRY_WARNING_DAYS) return { tone: "amber", label: `Expires in ${days}d` };
-  return { tone: "green", label: "Active" };
-}
 
 export default function ManufacturerDashboard({ wallet, profile }) {
   const ledger = useManufacturerLedger(wallet);
@@ -21,12 +12,7 @@ export default function ManufacturerDashboard({ wallet, profile }) {
   const [recalling, setRecalling] = useState(null);
   const [tracing, setTracing] = useState(null);
 
-  const escrow = wallet.deployment.contracts.SupplyChain.toLowerCase();
-  const nameOf = (addr) => {
-    if (!addr || /^0x0+$/.test(addr)) return "Manufactured";
-    if (addr.toLowerCase() === escrow) return "In transit";
-    return ledger.participants[addr.toLowerCase()]?.name ?? shortAddr(addr);
-  };
+  const nameOf = makeNameOf(ledger.participants, wallet.deployment.contracts.SupplyChain);
 
   const totals = useMemo(() => {
     const inStock = ledger.batches.reduce((s, b) => s + b.stock, 0n);
@@ -147,7 +133,6 @@ function BatchTable({ batches, onDispatch, onRecall, onTrace }) {
         <tbody className="divide-y divide-slate-100">
           {batches.map((b) => {
             const status = batchStatus(b);
-            const frozen = b.recalled || daysUntil(b.expiryDate) <= 0;
             return (
               <tr key={b.id} className="align-top">
                 <td className="px-5 py-3 font-mono text-xs text-slate-600">#{b.id.toString()}</td>
@@ -167,7 +152,7 @@ function BatchTable({ batches, onDispatch, onRecall, onTrace }) {
                     <Button size="sm" variant="secondary" onClick={() => onTrace(b)}>
                       Trail
                     </Button>
-                    <Button size="sm" onClick={() => onDispatch(b)} disabled={frozen || b.stock === 0n}>
+                    <Button size="sm" onClick={() => onDispatch(b)} disabled={status.frozen || b.stock === 0n}>
                       Dispatch
                     </Button>
                     <Button size="sm" variant="danger" onClick={() => onRecall(b)} disabled={b.recalled}>
