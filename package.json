@@ -15,7 +15,8 @@
     "deploy:local": "hardhat --config hardhat.config.js run scripts/deploy.js --network localhost",
     "deploy:sepolia": "hardhat --config hardhat.config.js run scripts/deploy.js --network sepolia",
     "clean": "hardhat --config hardhat.config.js clean",
-    "seed:local": "hardhat --config hardhat.config.js run scripts/seed.js --network localhost"
+    "seed:local": "hardhat --config hardhat.config.js run scripts/seed.js --network localhost",
+    "upload:cert": "node scripts/upload-certificate.js"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
