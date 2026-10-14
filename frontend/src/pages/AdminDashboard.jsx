@@ -63,7 +63,7 @@ export default function AdminDashboard({ wallet }) {
                       <td className="px-3 py-3">{p.active ? <Badge tone="teal">{roleLabel(p.role)}</Badge> : <Badge tone="slate">Revoked</Badge>}</td>
                       <td className="px-5 py-3">
                         <div className="flex justify-end gap-1.5">
-                          <Button size="sm" variant="secondary" disabled={!p.active} onClick={() => setChanging(p)}>
+                          <Button size="sm" variant="secondary" className="whitespace-nowrap" disabled={!p.active} onClick={() => setChanging(p)}>
                             Change role
                           </Button>
                           <Button size="sm" variant="danger" disabled={!p.active} onClick={() => setRevoking(p)}>
