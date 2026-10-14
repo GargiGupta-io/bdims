@@ -208,6 +208,22 @@ accounts #6 to #9 are left unregistered for onboarding during a demo.
 If MetaMask complains about nonces after restarting the node, use
 Settings → Advanced → Clear activity tab data.
 
+### QA certificates on IPFS
+
+Each batch stores the CID of its QA certificate. A CID is a fingerprint of
+the file's exact bytes, so anyone who fetches it knows it hasn't been
+swapped. Two ways to get one, both through Pinata (free tier):
+
+- **In the app:** "Register a batch" has an upload button. The manufacturer
+  pastes their own Pinata key (Files: Write); it is saved only in their
+  browser, and "Forget it" removes it. The key is never part of the built
+  site, because anything in the site ships to every visitor.
+- **In the terminal:** `npm run upload:cert -- certificate.pdf` uses
+  `PINATA_JWT` from `.env` and prints the CID.
+
+Files are uploaded as **public**, so the verification page can link to them
+through `https://ipfs.io/ipfs/<cid>`.
+
 ## Deployment (Gargi)
 
 ```bash
