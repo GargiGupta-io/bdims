@@ -7,6 +7,7 @@ import { ROLES } from "./lib/roles.js";
 import ManufacturerDashboard from "./pages/ManufacturerDashboard.jsx";
 import DistributorDashboard from "./pages/DistributorDashboard.jsx";
 import PharmacyDashboard from "./pages/PharmacyDashboard.jsx";
+import RegulatorDashboard from "./pages/RegulatorDashboard.jsx";
 import { ComingSoon, NotRegistered, WrongNetwork } from "./pages/Holding.jsx";
 import VerifyPage from "./pages/VerifyPage.jsx";
 
@@ -38,7 +39,7 @@ export default function App() {
   else if (profile.active && profile.role === ROLES.MANUFACTURER) body = <ManufacturerDashboard wallet={wallet} profile={profile} />;
   else if (profile.active && profile.role === ROLES.DISTRIBUTOR) body = <DistributorDashboard wallet={wallet} profile={profile} />;
   else if (profile.active && profile.role === ROLES.PHARMACY) body = <PharmacyDashboard wallet={wallet} profile={profile} />;
-  else if (profile.active && profile.role === ROLES.REGULATOR) body = <ComingSoon role="Regulator" />;
+  else if (profile.active && profile.role === ROLES.REGULATOR) body = <RegulatorDashboard wallet={wallet} profile={profile} />;
   else if (profile.isAdmin) body = <ComingSoon role="Admin" />;
   else body = <NotRegistered address={wallet.address} />;
 
