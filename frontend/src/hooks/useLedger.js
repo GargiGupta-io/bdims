@@ -139,3 +139,64 @@ export function useHolderLedger(wallet) {
   useLiveReload(load, provider);
   return { ...data, reload: load };
 }
+
+// For regulators and the admin: every batch on the network, who holds it,
+// and every recall. Batch IDs run 1..batchCount with no gaps.
+export function useNetworkLedger(wallet) {
+  const { contracts, deployment, provider } = wallet;
+  const [data, setData] = useState({ loading: true, participants: {}, batches: [], recalls: [] });
+  const loading = useRef(false);
+
+  const load = useCallback(async () => {
+    if (!contracts || loading.current) return;
+    loading.current = true;
+    try {
+      const { registry, inventory } = contracts;
+      const from = deployment.deployedBlock ?? 0;
+      const [participants, count, recallEvents] = await Promise.all([
+        loadParticipants(registry, from),
+        registry.batchCount(),
+        queryAll(inventory, inventory.filters.BatchRecalled(), from),
+      ]);
+
+      const ids = Array.from({ length: Number(count) }, (_, i) => BigInt(i + 1));
+      const batches = await Promise.all(
+        ids.map(async (id) => {
+          const [b, recalled, holderList] = await Promise.all([registry.getBatchDetails(id), inventory.isRecalled(id), inventory.getAffectedHolders(id)]);
+          const holders = [...holderList];
+          const stocks = await Promise.all(holders.map((h) => inventory.getFacilityStock(h, id)));
+          return {
+            id,
+            drugName: b.drugName,
+            composition: b.composition,
+            manufacturer: b.manufacturer,
+            mfgDate: b.mfgDate,
+            expiryDate: b.expiryDate,
+            quantity: b.quantity,
+            ipfsHash: b.ipfsHash,
+            recalled,
+            holders,
+            holdings: holders.map((h, i) => ({ address: h, stock: stocks[i] })),
+            unitsOut: stocks.reduce((s, v) => s + v, 0n),
+          };
+        })
+      );
+      batches.sort((a, b) => Number(b.id - a.id));
+
+      const blocks = await Promise.all([...new Set(recallEvents.map((e) => e.blockNumber))].map((n) => provider.getBlock(n)));
+      const time = Object.fromEntries(blocks.map((b) => [b.number, b.timestamp]));
+      const recalls = recallEvents
+        .map((e) => ({ batchId: e.args.batchId, by: e.args.issuedBy, reason: e.args.reason, timestamp: time[e.blockNumber] }))
+        .sort((a, b) => b.timestamp - a.timestamp);
+
+      setData({ loading: false, participants, batches, recalls, error: null });
+    } catch (e) {
+      setData((d) => ({ ...d, loading: false, error: e?.shortMessage || e?.message }));
+    } finally {
+      loading.current = false;
+    }
+  }, [contracts, deployment, provider]);
+
+  useLiveReload(load, provider);
+  return { ...data, reload: load };
+}
