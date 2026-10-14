@@ -5,7 +5,7 @@ import { formatUnits } from "ethers";
 const MESSAGES = {
   AccessControlUnauthorizedAccount: () => "Your account doesn't have the role this action needs.",
   ZeroQuantity: () => "Quantity must be more than zero.",
-  EmptyField: () => "Drug name and certificate are required.",
+  EmptyField: () => "A required field is empty.",
   InvalidDates: () => "Expiry must be after the manufacture date and in the future.",
   BatchNotFound: (a) => `Batch #${a[0]} doesn't exist. It may be forged.`,
   AlreadyRegistered: () => "That address is already registered.",
