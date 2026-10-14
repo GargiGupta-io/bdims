@@ -3,9 +3,8 @@ import { deployments, NETWORKS, PUBLIC_CHAIN_ID, readProvider } from "../lib/con
 import { allErrors, getContracts, queryAll } from "../lib/contracts.js";
 import { loadParticipants, makeNameOf } from "../lib/ledger.js";
 import { daysUntil, toDate, units } from "../lib/format.js";
+import { IPFS_GATEWAY } from "../lib/ipfs.js";
 import { Button, Card, inputClass } from "../components/ui.jsx";
-
-const IPFS_GATEWAY = "https://ipfs.io/ipfs/";
 
 // Anyone can check a medicine here: no wallet, no account. A batch that a
 // licensed manufacturer never registered has no on-chain identity, so it
