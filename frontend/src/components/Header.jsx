@@ -26,7 +26,7 @@ export default function Header({ wallet, profile, onVerifyPage }) {
             <div className="hidden text-right sm:block">
               <p className="text-sm font-medium leading-tight">{profile.name || shortAddr(wallet.address)}</p>
               <p className="text-xs leading-tight text-slate-500">
-                {profile.active ? roleLabel(profile.role) : profile.isAdmin ? "Admin" : "Not registered"} · {shortAddr(wallet.address)}
+                {profile.active ? roleLabel(profile.role) : profile.isAdmin ? "Admin" : profile.name ? "Revoked" : "Not registered"} · {shortAddr(wallet.address)}
               </p>
             </div>
             <Button variant="ghost" size="sm" onClick={wallet.disconnect}>
