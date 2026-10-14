@@ -158,20 +158,38 @@ It also switches the node from instant blocks to a fixed block time
 (2 s by default; `BLOCK_TIME_MS=12000 npm run setup` matches Sepolia and is
 the setting for the final report).
 
-**Right now** it benchmarks a temporary placeholder pair
-(`contracts/probe/`) that copies the awkward parts of the real design.
-Pipeline verified: 200/200 writes at 1.0 s average latency, 1000/1000 reads.
+**The real benchmark** is ready and waits only for the three contracts:
 
-**When the real contracts land:**
+```bash
+npm run node                                   # repo root, terminal 1
+cd caliper && BENCH_TARGET=bdims npm run setup # deploy, register workers, write configs
+npm run bench:bdims                            # both parts; reports in caliper/reports/
+```
 
-1. In `caliper/scripts/setup.js`, fill in the `bdims` target: register each
-   worker address with the role its round needs, and set gas limits.
-2. Copy `benchmarks/probe.yaml` to `benchmarks/bdims.yaml` with rounds for
-   `registerBatch`, `transferCustody` + `acceptConsignment`, `dispenseDrug`,
-   `flagRecall`, `getBatchDetails` and `getCustodyHistory`, one workload file
-   each in `workloads/bdims/`.
-3. Run `BENCH_TARGET=bdims npm run setup`, then the bench against `bdims.yaml`.
-4. Delete `contracts/probe/` and the probe files.
+A Caliper worker can only sign as one account, and our steps need
+different roles, so it runs in two parts with two sets of worker accounts
+(`caliper/accounts.js`):
+
+| Part | Workers are | Rounds |
+|---|---|---|
+| `bdims-manufacturers.yaml` | manufacturers | `registerBatch` (touches all three contracts), `transferCustody` to a pharmacy, `flagRecall`, reads `getBatchDetails` and `getCustodyHistory` |
+| `bdims-pharmacies.yaml` | pharmacies | `acceptConsignment` of what part 1 dispatched, `dispenseDrug` |
+
+Setup registers every worker with its role from the admin account, uses the
+interface ABIs (so any implementation works), and sets a fixed gas limit per
+method in `scripts/setup.js`. If a round fails with "out of gas", raise that
+number and rerun setup. Keep both yaml files on the same worker count:
+manufacturer worker N dispatches to pharmacy worker N.
+
+Verified end to end against stand-in implementations of the interfaces at
+2 s blocks: every round 100% successful (300 registrations, 100 dispatches,
+50 recalls, 100 acceptances, 200 dispenses, 2,000 reads), about 1 s average
+write latency. For the final report, rerun on the real contracts with
+`BLOCK_TIME_MS=12000`.
+
+`npm run setup` with no target still runs the placeholder pipeline check
+(`contracts/probe/`, `benchmarks/probe.yaml`). Delete those once the real
+benchmark has run on the real contracts.
 
 ## Frontend (Gargi)
 
