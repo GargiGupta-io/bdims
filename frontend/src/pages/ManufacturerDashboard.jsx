@@ -3,8 +3,8 @@ import { useManufacturerLedger } from "../hooks/useLedger.js";
 import { batchStatus, makeNameOf } from "../lib/ledger.js";
 import { useTx } from "../hooks/useTx.js";
 import { dateInputToSeconds, toDate, todayInput, units } from "../lib/format.js";
-import { Badge, Button, Card, Field, Modal, Stat, TxStatus, inputClass } from "../components/ui.jsx";
-import { DispatchModal, InTransit, TrailModal } from "../components/batch.jsx";
+import { Badge, Button, Card, Field, Stat, TxStatus, inputClass } from "../components/ui.jsx";
+import { DispatchModal, InTransit, RecallModal, TrailModal } from "../components/batch.jsx";
 
 export default function ManufacturerDashboard({ wallet, profile }) {
   const ledger = useManufacturerLedger(wallet);
@@ -166,52 +166,5 @@ function BatchTable({ batches, onDispatch, onRecall, onTrace }) {
         </tbody>
       </table>
     </div>
-  );
-}
-
-function RecallModal({ batch, inventory, nameOf, onClose, onDone }) {
-  const [reason, setReason] = useState("");
-  const tx = useTx(onDone);
-  return (
-    <Modal title={`Recall batch #${batch.id} · ${batch.drugName}`} onClose={onClose}>
-      {tx.state.status === "done" ? (
-        <div className="space-y-3 text-sm">
-          <p className="font-medium text-rose-700">Batch #{batch.id.toString()} is frozen across the network.</p>
-          <p className="text-slate-600">Nobody can transfer, accept or dispense it from block {tx.state.block}. These holders still have units and need to be contacted:</p>
-          <ul className="list-disc space-y-1 pl-5">
-            {batch.holders.map((h) => (
-              <li key={h}>{nameOf(h)}</li>
-            ))}
-          </ul>
-          <div className="flex justify-end">
-            <Button onClick={onClose}>Done</Button>
-          </div>
-        </div>
-      ) : (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            tx.run("Recall", () => inventory.flagRecall(batch.id, reason.trim()));
-          }}
-          className="space-y-4"
-        >
-          <p className="text-sm text-slate-600">
-            One transaction freezes this batch everywhere: no transfers, no acceptances, no dispensing. It <span className="font-medium">cannot be undone.</span>
-          </p>
-          <Field label="Reason">
-            <input className={inputClass} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Contamination found in QA retest" required />
-          </Field>
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="secondary" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="danger" disabled={tx.busy}>
-              {tx.busy ? "Recalling…" : "Recall batch"}
-            </Button>
-          </div>
-          <TxStatus state={tx.state} />
-        </form>
-      )}
-    </Modal>
   );
 }
