@@ -187,9 +187,9 @@ What you see depends on the role the registry gives your wallet address:
 | Manufacturer | MANUFACTURER | Register batches, live stock, dispatch, cancel transfers in transit, custody trail, recall |
 | Distributor | DISTRIBUTOR | Accept or reject incoming consignments, forward stock, cancel transfers in transit, custody trail |
 | Pharmacy | PHARMACY | Accept or reject consignments, dispense, reorder levels, alerts for recalled, expiring and low stock, dispensing record |
+| Regulator | REGULATOR | Every batch on the network with search and status filters, who holds each one, recall any batch, recall history, units of unsafe stock still held |
+| Admin | ADMIN (the deployer) | Onboard participants, change a participant's role, revoke access |
 | Verify a medicine | Anyone, no wallet | Enter a batch number (or open `#/verify/<batch>`): genuine, not recognised, recalled or expired, with the custody trail |
-
-Regulator and admin screens are still to come.
 
 Run it locally:
 
@@ -203,7 +203,8 @@ cd frontend && npm install && npm run dev
 Open the printed address. On the local chain you can pick **"act as a local
 test account"** (no wallet needed), or connect MetaMask: add the network
 `http://127.0.0.1:8545`, chain ID 31337, and import a key printed by
-`npm run node`. `scripts/seed.js` lists which account plays which role.
+`npm run node`. `scripts/seed.js` lists which account plays which role;
+accounts #6 to #9 are left unregistered for onboarding during a demo.
 If MetaMask complains about nonces after restarting the node, use
 Settings → Advanced → Clear activity tab data.
 
