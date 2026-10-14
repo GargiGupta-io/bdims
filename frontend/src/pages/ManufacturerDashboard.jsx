@@ -5,6 +5,7 @@ import { useTx } from "../hooks/useTx.js";
 import { dateInputToSeconds, toDate, todayInput, units } from "../lib/format.js";
 import { Badge, Button, Card, Field, Stat, TxStatus, inputClass } from "../components/ui.jsx";
 import { DispatchModal, InTransit, RecallModal, TrailModal } from "../components/batch.jsx";
+import CertificateField from "../components/CertificateField.jsx";
 
 export default function ManufacturerDashboard({ wallet, profile }) {
   const ledger = useManufacturerLedger(wallet);
@@ -104,10 +105,8 @@ function RegisterBatch({ registry, onDone }) {
         <Field label="Quantity (units)">
           <input type="number" min="1" step="1" className={inputClass} value={form.quantity} onChange={set("quantity")} placeholder="10000" required />
         </Field>
-        <Field label="QA certificate (IPFS CID)" hint="Upload to IPFS comes next. For now, paste the certificate's CID.">
-          <input className={inputClass} value={form.ipfsHash} onChange={set("ipfsHash")} placeholder="bafkrei…" required />
-        </Field>
-        <Button type="submit" disabled={tx.busy} className="w-full">
+        <CertificateField value={form.ipfsHash} onChange={(cid) => setForm((f) => ({ ...f, ipfsHash: cid }))} />
+        <Button type="submit" disabled={tx.busy || !form.ipfsHash.trim()} className="w-full">
           {tx.busy ? "Registering…" : "Register batch"}
         </Button>
         <TxStatus state={tx.state} />
