@@ -6,7 +6,8 @@ import { roleLabel } from "../lib/roles.js";
 import { shortAddr } from "../lib/format.js";
 import { Button, Card } from "./ui.jsx";
 
-// Local test accounts 0 to 5, labelled with who the registry says they are.
+// Local test accounts 0 to 9, labelled with who the registry says they are.
+// 0 to 5 are seeded; 6 to 9 are spares for the admin to onboard during a demo.
 function useLocalAccounts() {
   const [accounts, setAccounts] = useState([]);
   useEffect(() => {
@@ -15,11 +16,11 @@ function useLocalAccounts() {
       try {
         const provider = new JsonRpcProvider(LOCAL_RPC, LOCAL_CHAIN_ID, { staticNetwork: true });
         const { registry } = getContracts(deployments[LOCAL_CHAIN_ID], provider);
-        const addresses = (await provider.send("eth_accounts", [])).slice(0, 6);
+        const addresses = (await provider.send("eth_accounts", [])).slice(0, 10);
         const rows = await Promise.all(
           addresses.map(async (address, index) => {
             const [p, admin] = await Promise.all([registry.getParticipant(address), registry.hasRole("0x" + "0".repeat(64), address)]);
-            return { index, address, label: p.active ? `${p.name} · ${roleLabel(p.role)}` : admin ? "Admin (deployer)" : "Not registered" };
+            return { index, address, label: p.active ? `${p.name} · ${roleLabel(p.role)}` : admin ? "Admin (deployer)" : p.name ? `${p.name} · Revoked` : "Not registered" };
           })
         );
         setAccounts(rows);
