@@ -42,7 +42,7 @@ export default function App() {
   else if (profile.active && profile.role === ROLES.PHARMACY) body = <PharmacyDashboard wallet={wallet} profile={profile} />;
   else if (profile.active && profile.role === ROLES.REGULATOR) body = <RegulatorDashboard wallet={wallet} profile={profile} />;
   else if (profile.isAdmin) body = <AdminDashboard wallet={wallet} />;
-  else body = <NotRegistered address={wallet.address} />;
+  else body = <NotRegistered address={wallet.address} revokedName={profile.name} />;
 
   return (
     <div className="min-h-screen">
