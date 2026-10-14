@@ -7,6 +7,7 @@
 const UPLOAD_URL = import.meta.env.VITE_PINATA_UPLOAD_URL || "https://uploads.pinata.cloud/v3/files";
 const KEY_NAME = "bdims.pinataJwt";
 
+export const IPFS_GATEWAY = "https://ipfs.io/ipfs/";
 export const MAX_CERTIFICATE_BYTES = 10 * 1024 * 1024;
 export const CERTIFICATE_TYPES = "application/pdf,image/png,image/jpeg";
 
