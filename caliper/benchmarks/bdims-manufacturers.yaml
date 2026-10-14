@@ -1,0 +1,67 @@
+# Part 1 of 2: the manufacturer side. Run before bdims-pharmacies.yaml,
+# which accepts the consignments this run dispatches.
+#
+# Counts are TOTALS, split evenly across workers. Each worker dispatches
+# and recalls its own batches, so registerBatch must create at least
+# transferCustody + flagRecall batches (here 300 >= 100 + 50).
+test:
+  name: bdims-manufacturers
+  description: Register, dispatch and recall batches, plus the public lookups.
+  workers:
+    number: 2
+  rounds:
+    - label: registerBatch
+      description: Write across all three contracts (registry, custody, stock).
+      txNumber: 300
+      rateControl:
+        type: fixed-rate
+        opts:
+          tps: 10
+      workload:
+        module: workloads/bdims/register-batch.js
+        arguments:
+          quantity: 10000
+    - label: transferCustody
+      description: Write. Dispatch a batch to a pharmacy; units go into escrow.
+      txNumber: 100
+      rateControl:
+        type: fixed-rate
+        opts:
+          tps: 10
+      workload:
+        module: workloads/bdims/transfer-custody.js
+        arguments:
+          quantity: 1000
+    - label: flagRecall
+      description: Write. Freeze a batch network-wide.
+      txNumber: 50
+      rateControl:
+        type: fixed-rate
+        opts:
+          tps: 10
+      workload:
+        module: workloads/bdims/flag-recall.js
+    - label: getBatchDetails
+      description: Read. What the public verification page does first.
+      txNumber: 1000
+      rateControl:
+        type: fixed-rate
+        opts:
+          tps: 100
+      workload:
+        module: workloads/bdims/read.js
+        arguments:
+          contract: DrugRegistry
+          verb: getBatchDetails
+    - label: getCustodyHistory
+      description: Read. The full custody trail of a batch.
+      txNumber: 1000
+      rateControl:
+        type: fixed-rate
+        opts:
+          tps: 100
+      workload:
+        module: workloads/bdims/read.js
+        arguments:
+          contract: SupplyChain
+          verb: getCustodyHistory
