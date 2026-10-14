@@ -29,7 +29,7 @@ frontend/dist/
 !.vscode/extensions.json
 
 # Caliper: generated per run
-caliper/networks/localhost.json
+caliper/networks/*.json
 caliper/reports/
 caliper/caliper.log
 caliper/log/
