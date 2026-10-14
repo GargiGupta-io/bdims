@@ -1,0 +1,29 @@
+# Part 2 of 2: the pharmacy side. Needs the consignments dispatched by
+# bdims-manufacturers.yaml, and the SAME number of workers (manufacturer
+# worker N dispatches to pharmacy worker N).
+test:
+  name: bdims-pharmacies
+  description: Accept consignments and dispense to patients.
+  workers:
+    number: 2
+  rounds:
+    - label: acceptConsignment
+      description: Write. Confirm receipt; units move from escrow to the pharmacy.
+      txNumber: 100
+      rateControl:
+        type: fixed-rate
+        opts:
+          tps: 10
+      workload:
+        module: workloads/bdims/accept-consignment.js
+    - label: dispenseDrug
+      description: Write. Recall, expiry and stock checks, then debit and log.
+      txNumber: 200
+      rateControl:
+        type: fixed-rate
+        opts:
+          tps: 20
+      workload:
+        module: workloads/bdims/dispense-drug.js
+        arguments:
+          quantity: 1
