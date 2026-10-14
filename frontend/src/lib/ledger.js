@@ -3,14 +3,14 @@ import { daysUntil, shortAddr } from "./format.js";
 
 export const EXPIRY_WARNING_DAYS = 30;
 
-// Every participant ever registered, with their CURRENT name, role and status.
+// Every participant ever registered, with their CURRENT name, licence, role and status.
 export async function loadParticipants(registry, fromBlock) {
   const joined = await queryAll(registry, registry.filters.ParticipantRegistered(), fromBlock);
   const accounts = [...new Set(joined.map((e) => e.args.account))];
   const records = await Promise.all(accounts.map((a) => registry.getParticipant(a)));
   const directory = {};
   records.forEach((p, i) => {
-    directory[accounts[i].toLowerCase()] = { address: accounts[i], name: p.name, role: p.role, active: p.active };
+    directory[accounts[i].toLowerCase()] = { address: accounts[i], name: p.name, licenceId: p.licenceId, role: p.role, active: p.active };
   });
   return directory;
 }
