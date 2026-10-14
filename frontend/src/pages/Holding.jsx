@@ -2,24 +2,6 @@ import { Button, Card } from "../components/ui.jsx";
 import { NETWORKS, deployments, LOCAL_CHAIN_ID, SEPOLIA_CHAIN_ID } from "../lib/config.js";
 import { shortAddr } from "../lib/format.js";
 
-const NEXT = {
-  Distributor: "Accept incoming consignments, see your stock per batch, and forward it to pharmacies or other distributors.",
-  Pharmacy: "Receive stock, dispense to patients with automatic expiry and recall checks, and get warnings before batches expire.",
-  Regulator: "Search every batch and participant, read full custody trails, and recall any batch network-wide.",
-  Admin: "Onboard manufacturers, distributors, pharmacies and regulators, and change or revoke their roles.",
-};
-
-export function ComingSoon({ role }) {
-  return (
-    <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6">
-      <Card title={`${role} dashboard`} subtitle="Coming next">
-        <p className="text-slate-600">{NEXT[role]}</p>
-        <p className="mt-3 text-sm text-slate-500">The manufacturer dashboard is built first. Switch to a manufacturer account to try it.</p>
-      </Card>
-    </div>
-  );
-}
-
 export function NotRegistered({ address }) {
   return (
     <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6">
