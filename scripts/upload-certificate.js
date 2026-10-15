@@ -37,7 +37,7 @@ async function main() {
   if (!cid) throw new Error("Pinata didn't return a CID.");
 
   console.log(cid);
-  console.error(`View it at https://ipfs.io/ipfs/${cid}`);
+  console.error(`View it at https://gateway.pinata.cloud/ipfs/${cid}`);
 }
 
 main().catch((e) => {
