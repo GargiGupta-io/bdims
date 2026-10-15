@@ -240,7 +240,8 @@ swapped. Two ways to get one, both through Pinata (free tier):
   `PINATA_JWT` from `.env` and prints the CID.
 
 Files are uploaded as **public**, so the verification page can link to them
-through `https://ipfs.io/ipfs/<cid>`.
+through `https://gateway.pinata.cloud/ipfs/<cid>` (set `VITE_IPFS_GATEWAY` to
+use another gateway). Not ipfs.io: it now refuses plain requests.
 
 ## Deployment (Gargi)
 
