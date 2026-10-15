@@ -7,7 +7,10 @@
 const UPLOAD_URL = import.meta.env.VITE_PINATA_UPLOAD_URL || "https://uploads.pinata.cloud/v3/files";
 const KEY_NAME = "bdims.pinataJwt";
 
-export const IPFS_GATEWAY = "https://ipfs.io/ipfs/";
+// Where certificate links open. ipfs.io and dweb.link are moving to a
+// service-worker-only gateway and refuse plain requests (HTTP 429), so we
+// use Pinata's public gateway, which serves everything pinned there.
+export const IPFS_GATEWAY = import.meta.env.VITE_IPFS_GATEWAY || "https://gateway.pinata.cloud/ipfs/";
 export const MAX_CERTIFICATE_BYTES = 10 * 1024 * 1024;
 export const CERTIFICATE_TYPES = "application/pdf,image/png,image/jpeg";
 
