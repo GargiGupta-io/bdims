@@ -11,6 +11,7 @@
     "compile": "hardhat --config hardhat.config.js compile",
     "test": "hardhat --config hardhat.config.js test",
     "coverage": "hardhat --config hardhat.config.js coverage",
+    "report": "hardhat --config hardhat.config.js run scripts/test-report.js; npm run coverage; node scripts/build-dev-report.js",
     "node": "hardhat --config hardhat.config.js node",
     "deploy:local": "hardhat --config hardhat.config.js run scripts/deploy.js --network localhost",
     "deploy:sepolia": "hardhat --config hardhat.config.js run scripts/deploy.js --network sepolia",
