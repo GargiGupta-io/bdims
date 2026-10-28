@@ -208,6 +208,7 @@ What you see depends on the role the registry gives your wallet address:
 | Regulator | REGULATOR | Every batch on the network with search and status filters, who holds each one, recall any batch, recall history, units of unsafe stock still held |
 | Admin | ADMIN (the deployer) | Onboard participants, change a participant's role, revoke access |
 | Verify a medicine | Anyone, no wallet | Enter a batch number (or open `#/verify/<batch>`): genuine, not recognised, recalled or expired, with the custody trail |
+| Developer | Anyone | `#/dev`: every test case with its result, coverage per contract, deployed addresses with Etherscan links, and the Caliper benchmark |
 
 Run it locally:
 
@@ -242,6 +243,18 @@ swapped. Two ways to get one, both through Pinata (free tier):
 Files are uploaded as **public**, so the verification page can link to them
 through `https://gateway.pinata.cloud/ipfs/<cid>` (set `VITE_IPFS_GATEWAY` to
 use another gateway). Not ipfs.io: it now refuses plain requests.
+
+### Developer page and hosting
+
+The site is published to GitHub Pages by `.github/workflows/pages.yml` on
+every push to `main`. Before building, the workflow runs `npm run report`,
+which runs the tests and coverage and writes `frontend/public/dev-report.json`
+(`scripts/build-dev-report.js`). The developer page shows only that file, so
+its numbers are always those of the published commit. To see it locally, run
+`npm run report` in the repo root, then start the frontend and open `#/dev`.
+
+The hosted site reads Sepolia once `deployments/sepolia.json` is committed.
+The Caliper section appears once `caliper/results/summary.json` exists.
 
 ## Deployment (Gargi)
 
