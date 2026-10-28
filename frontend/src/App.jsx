@@ -11,8 +11,10 @@ import RegulatorDashboard from "./pages/RegulatorDashboard.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import { NotRegistered, WrongNetwork } from "./pages/Holding.jsx";
 import VerifyPage from "./pages/VerifyPage.jsx";
+import DevPage from "./pages/DevPage.jsx";
 
-// "#/verify" or "#/verify/<batch>" opens the public page; anything else is the dashboard.
+// "#/verify" or "#/verify/<batch>" opens the public page, "#/dev" the
+// developer page; anything else is the dashboard.
 function useRoute() {
   const [hash, setHash] = useState(window.location.hash);
   useEffect(() => {
@@ -21,7 +23,8 @@ function useRoute() {
     return () => window.removeEventListener("hashchange", onChange);
   }, []);
   const [, page, arg] = hash.split("/");
-  return page === "verify" ? { page: "verify", batchId: arg || null } : { page: "app" };
+  if (page === "verify") return { page: "verify", batchId: arg || null };
+  return { page: page === "dev" ? "dev" : "app" };
 }
 
 // One shell for everyone. What you see depends on the role the registry
@@ -33,6 +36,7 @@ export default function App() {
 
   let body;
   if (route.page === "verify") body = <VerifyPage batchId={route.batchId} />;
+  else if (route.page === "dev") body = <DevPage />;
   else if (wallet.status !== "ready") body = <ConnectScreen wallet={wallet} />;
   else if (!wallet.deployment) body = <WrongNetwork wallet={wallet} />;
   else if (profile.loading) body = <p className="py-16 text-center text-sm text-slate-500">Reading the registry…</p>;
@@ -46,7 +50,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen">
-      <Header wallet={wallet} profile={profile} onVerifyPage={route.page === "verify"} />
+      <Header wallet={wallet} profile={profile} page={route.page} />
       <main>{body}</main>
     </div>
   );
