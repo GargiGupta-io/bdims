@@ -19,7 +19,6 @@ const EthereumHDKey = require('ethereumjs-wallet/hdkey');
 const MAX_WORKERS = 10;
 
 const SEEDS = {
-    probe: 'bdims-caliper-local-benchmark-seed',
     manufacturers: 'bdims-caliper-manufacturers',
     pharmacies: 'bdims-caliper-pharmacies',
 };
