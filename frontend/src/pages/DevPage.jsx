@@ -179,7 +179,7 @@ function TestCases({ tests }) {
   }, [tests, query, status]);
 
   return (
-    <Card title="Every test case" subtitle="Grouped by contract and feature. Pending cases are written but wait for DrugRegistry.">
+    <Card title="Every test case" subtitle={`Grouped by contract and feature.${tests.pending ? " Pending cases are written but not run yet." : ""}`}>
       <div className="mb-4 flex flex-col gap-2 sm:flex-row">
         <input className={inputClass} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search, e.g. recall" aria-label="Search test cases" />
         <select className={`${inputClass} sm:w-44`} value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Filter by result">
