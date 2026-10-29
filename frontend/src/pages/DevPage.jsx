@@ -133,7 +133,10 @@ function Contracts({ deployments }) {
 
 function Benchmark({ benchmark }) {
   return (
-    <Card title="Performance benchmark" subtitle="Hyperledger Caliper on the real contracts, 12-second blocks like Sepolia.">
+    <Card
+      title="Performance benchmark"
+      subtitle={`Hyperledger Caliper on the real contracts${benchmark ? `, ${benchmark.blockTimeMs / 1000}-second blocks like Sepolia, run ${new Date(benchmark.generatedAt).toLocaleDateString("en-IN", { dateStyle: "medium" })}` : ""}.`}
+    >
       {!benchmark ? (
         <p className="text-sm text-slate-500">Not run on the real contracts yet.</p>
       ) : (
@@ -155,6 +158,12 @@ function Benchmark({ benchmark }) {
               ))}
             </tbody>
           </table>
+          <p className="pt-3 text-xs text-slate-500">
+            Full Caliper reports:{" "}
+            <a className="text-teal-700 underline" href="./caliper/bdims-manufacturers.html" target="_blank" rel="noreferrer">manufacturer rounds</a>
+            {" · "}
+            <a className="text-teal-700 underline" href="./caliper/bdims-pharmacies.html" target="_blank" rel="noreferrer">pharmacy rounds</a>
+          </p>
         </div>
       )}
     </Card>
