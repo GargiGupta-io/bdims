@@ -82,6 +82,14 @@ const report = {
 
 const out = path.join(root, "frontend", "public", "dev-report.json");
 fs.mkdirSync(path.dirname(out), { recursive: true });
+// The full Caliper reports, linked from the page.
+if (report.benchmark) {
+  const dir = path.join(root, "frontend", "public", "caliper");
+  fs.mkdirSync(dir, { recursive: true });
+  for (const f of fs.readdirSync(path.join(root, "caliper", "results")).filter((f) => f.endsWith(".html"))) {
+    fs.copyFileSync(path.join(root, "caliper", "results", f), path.join(dir, f));
+  }
+}
 fs.writeFileSync(out, JSON.stringify(report, null, 2) + "\n");
 const t = report.tests;
 console.log(`Developer report: ${t ? `${t.passed} passed, ${t.pending} pending, ${t.failed} failed` : "no test results"}`);
