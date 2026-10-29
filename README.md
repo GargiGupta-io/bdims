@@ -143,28 +143,20 @@ release with an Ethereum connector, plus web3 1.3.0), so it never clashes
 with Hardhat.
 
 ```bash
-cd caliper && npm install        # once
-npm run node                     # repo root, terminal 1: local chain
-cd caliper && npm run setup      # terminal 2: deploy, fund workers, write config
-npm run bench                    # run the rounds; report in caliper/reports/report.html
+cd caliper && npm install                          # once
+npm run node                                       # repo root, terminal 1: local chain
+cd caliper && BLOCK_TIME_MS=12000 npm run setup    # terminal 2: deploy, register workers, write configs
+npm run bench                                      # both parts, then caliper/results/
 ```
 
 **Why setup exists.** Caliper normally deploys contracts itself, but only
 with no constructor arguments and no wiring between contracts. Ours need
 both. So `setup` deploys with our own script, funds one account per Caliper
 worker (shared accounts make nonces collide), writes the addresses and ABIs
-into `networks/localhost.json`, and Caliper runs with deployment skipped.
+into `networks/`, and Caliper runs with deployment skipped.
 It also switches the node from instant blocks to a fixed block time
 (2 s by default; `BLOCK_TIME_MS=12000 npm run setup` matches Sepolia and is
 the setting for the final report).
-
-**The real benchmark** is ready and waits only for the three contracts:
-
-```bash
-npm run node                                   # repo root, terminal 1
-cd caliper && BENCH_TARGET=bdims npm run setup # deploy, register workers, write configs
-npm run bench:bdims                            # both parts; reports in caliper/reports/
-```
 
 A Caliper worker can only sign as one account, and our steps need
 different roles, so it runs in two parts with two sets of worker accounts
@@ -181,15 +173,11 @@ method in `scripts/setup.js`. If a round fails with "out of gas", raise that
 number and rerun setup. Keep both yaml files on the same worker count:
 manufacturer worker N dispatches to pharmacy worker N.
 
-Verified end to end against stand-in implementations of the interfaces at
-2 s blocks: every round 100% successful (300 registrations, 100 dispatches,
-50 recalls, 100 acceptances, 200 dispenses, 2,000 reads), about 1 s average
-write latency. For the final report, rerun on the real contracts with
-`BLOCK_TIME_MS=12000`.
-
-`npm run setup` with no target still runs the placeholder pipeline check
-(`contracts/probe/`, `benchmarks/probe.yaml`). Delete those once the real
-benchmark has run on the real contracts.
+**Results** (real contracts, 12 s blocks like Sepolia, 29 Oct 2026): all
+2,750 transactions succeeded, none failed. Writes averaged 6 to 9 s from
+submission to confirmation, inside one 12 s block; reads took under 0.01 s.
+`npm run bench` ends by writing `caliper/results/summary.json` and copying
+both HTML reports there; the developer page shows them.
 
 ## Frontend (Gargi)
 
@@ -253,8 +241,8 @@ which runs the tests and coverage and writes `frontend/public/dev-report.json`
 its numbers are always those of the published commit. To see it locally, run
 `npm run report` in the repo root, then start the frontend and open `#/dev`.
 
-The hosted site reads Sepolia once `deployments/sepolia.json` is committed.
-The Caliper section appears once `caliper/results/summary.json` exists.
+The hosted site reads the live Sepolia contracts from
+`deployments/sepolia.json`, and the benchmark from `caliper/results/`.
 
 ## Deployment (Gargi)
 
@@ -266,6 +254,28 @@ npm run deploy:local             # terminal 2
 For Sepolia, copy `.env.example` to `.env`, fill it in, then
 `npm run deploy:sepolia`. The script prints the Etherscan verify commands
 and writes `deployments/sepolia.json` for the frontend.
+
+**Live on Sepolia** since 29 Oct 2026, source verified on Etherscan:
+
+| Contract | Address |
+|---|---|
+| DrugRegistry | [`0x51743Bf5173B42faeA13AC00Ded619021Bdd7047`](https://sepolia.etherscan.io/address/0x51743Bf5173B42faeA13AC00Ded619021Bdd7047#code) |
+| SupplyChain | [`0xA4240e03bBAd7c5b9F96329E025e6D2E402E78c2`](https://sepolia.etherscan.io/address/0xA4240e03bBAd7c5b9F96329E025e6D2E402E78c2#code) |
+| InventoryManager | [`0xf22BcDF94574cF065Ea3ae993F01f583366A35d9`](https://sepolia.etherscan.io/address/0xf22BcDF94574cF065Ea3ae993F01f583366A35d9#code) |
+
+Demo data came from `npm run seed:sepolia`: five fictional participants
+marked "(demo)", one per role, and three batches whose certificates are demo
+PDFs on IPFS. Batch 1 went through three custody hops and was partly
+dispensed, batch 2 is in transit, and batch 3 was recalled. The participants'
+test-wallet keys are in `.env.demo-wallets.json` (gitignored); import one
+into MetaMask to use that dashboard.
+
+**Security scan.** [Slither](https://github.com/crytic/slither) on the three
+contracts reports no high or medium findings. Its four low notes are expected:
+three are expiry comparisons with `block.timestamp` (expiry is measured in
+days, so a validator shifting the clock by seconds changes nothing), and one
+is InventoryManager's constructor not checking for a zero address (only the
+deploy script calls it, with real addresses).
 
 ---
 
