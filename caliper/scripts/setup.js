@@ -12,8 +12,7 @@
 //      so latency numbers mean something.
 //
 // Usage (repo root: `npm run node` must already be running):
-//   npm run setup                        placeholder contracts (until the real ones exist)
-//   BENCH_TARGET=bdims npm run setup     the real contracts
+//   npm run setup                        the real contracts
 //   BLOCK_TIME_MS=12000 npm run setup    Sepolia-like 12 s blocks (use for the final report)
 //   BENCH_DEPLOY=existing                skip deploying; use the contracts already in
 //                                        the target's manifest (e.g. deployed by hand)
@@ -37,7 +36,7 @@ const DEPLOYER_KEY = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7b
 const WORKER_FUNDING_ETH = "100";
 
 const BLOCK_TIME_MS = Number(process.env.BLOCK_TIME_MS || 2000);
-const TARGET = process.env.BENCH_TARGET || "probe";
+const TARGET = process.env.BENCH_TARGET || "bdims";
 const SKIP_DEPLOY = process.env.BENCH_DEPLOY === "existing";
 
 const role = (name) => Web3.utils.keccak256(name);
@@ -48,13 +47,6 @@ const role = (name) => Web3.utils.keccak256(name);
 // transaction, and a reverting estimate would crash the worker instead of
 // counting as a failed transaction.
 const TARGETS = {
-  probe: {
-    deploy: "caliper/scripts/deploy-probe.js",
-    manifest: "deployments/localhost-probe.json",
-    abi: (name) => findArtifact(name).abi,
-    groups: { localhost: { seed: SEEDS.probe } },
-    gas: { ProbeRegistry: { registerBatch: 300000 }, ProbeLedger: {} },
-  },
   bdims: {
     deploy: "scripts/deploy.js",
     manifest: "deployments/localhost.json",
@@ -174,7 +166,9 @@ async function main() {
   // Real-network behaviour from here on: a block every BLOCK_TIME_MS.
   await rpc("evm_setAutomine", [false]);
   await rpc("evm_setIntervalMining", [BLOCK_TIME_MS]);
-  console.log(`Node now mines a block every ${BLOCK_TIME_MS} ms. Ready: npm run ${TARGET === "bdims" ? "bench:bdims" : "bench"}`);
+  // For scripts/summarise.js, so the results say which block time they ran at.
+  fs.writeFileSync(path.join(CALIPER_ROOT, "networks", "block-time.json"), JSON.stringify({ blockTimeMs: BLOCK_TIME_MS }) + "\n");
+  console.log(`Node now mines a block every ${BLOCK_TIME_MS} ms. Ready: npm run bench`);
 }
 
 main().catch((err) => {
