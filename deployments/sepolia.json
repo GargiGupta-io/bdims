@@ -1,0 +1,12 @@
+{
+  "network": "sepolia",
+  "chainId": 11155111,
+  "deployedAt": "2026-10-29T04:15:13.671Z",
+  "deployedBlock": 12017038,
+  "deployer": "0xabB249A7cC13429DD8B01605485bCF1c40C89D0F",
+  "contracts": {
+    "DrugRegistry": "0x51743Bf5173B42faeA13AC00Ded619021Bdd7047",
+    "SupplyChain": "0xA4240e03bBAd7c5b9F96329E025e6D2E402E78c2",
+    "InventoryManager": "0xf22BcDF94574cF065Ea3ae993F01f583366A35d9"
+  }
+}
