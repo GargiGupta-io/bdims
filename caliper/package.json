@@ -10,8 +10,8 @@
   },
   "scripts": {
     "setup": "node scripts/setup.js",
-    "bench": "caliper launch manager --caliper-workspace . --caliper-networkconfig networks/localhost.json --caliper-benchconfig benchmarks/probe.yaml --caliper-flow-skip-install --caliper-report-path reports/report.html",
-    "bench:bdims": "npm run bench:manufacturers && npm run bench:pharmacies",
+    "bench": "npm run bench:manufacturers && npm run bench:pharmacies && node scripts/summarise.js",
+    "bench:bdims": "npm run bench",
     "bench:manufacturers": "caliper launch manager --caliper-workspace . --caliper-networkconfig networks/bdims-manufacturers.json --caliper-benchconfig benchmarks/bdims-manufacturers.yaml --caliper-flow-skip-install --caliper-report-path reports/bdims-manufacturers.html",
     "bench:pharmacies": "caliper launch manager --caliper-workspace . --caliper-networkconfig networks/bdims-pharmacies.json --caliper-benchconfig benchmarks/bdims-pharmacies.yaml --caliper-flow-skip-install --caliper-report-path reports/bdims-pharmacies.html"
   }
