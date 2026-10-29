@@ -153,7 +153,9 @@ function Benchmark({ benchmark }) {
               {benchmark.rounds.map((r) => (
                 <tr key={r.name}>
                   <td className="py-2 pr-4 font-mono text-xs">{r.name}</td>
-                  {[r.succ, r.fail, r.throughput, r.avgLatency].map((v, i) => <td key={i} className="py-2 pr-4 text-right tabular-nums">{v}</td>)}
+                  {[r.succ, r.fail, r.throughput, r.avgLatency === 0 ? "< 0.01" : r.avgLatency].map((v, i) => (
+                    <td key={i} className="py-2 pr-4 text-right tabular-nums">{v}</td>
+                  ))}
                 </tr>
               ))}
             </tbody>
