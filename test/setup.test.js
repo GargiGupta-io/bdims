@@ -10,8 +10,9 @@ describe("Setup", function () {
   it("has funded test accounts (no faucet needed)", async function () {
     const signers = await hre.ethers.getSigners();
     expect(signers.length).to.equal(20);
+    // Each starts with 10,000 ETH; other test files may already have spent a little on gas.
     const balance = await hre.ethers.provider.getBalance(signers[0].address);
-    expect(balance).to.equal(hre.ethers.parseEther("10000"));
+    expect(balance).to.be.greaterThan(hre.ethers.parseEther("9900"));
   });
 
   it("compiles all three shared interfaces", async function () {
