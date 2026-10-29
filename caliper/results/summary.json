@@ -1,0 +1,69 @@
+{
+  "generatedAt": "2026-10-29T04:22:47.332Z",
+  "blockTimeMs": 12000,
+  "rounds": [
+    {
+      "name": "registerBatch",
+      "succ": 300,
+      "fail": 0,
+      "sendRate": 10.1,
+      "throughput": 8.5,
+      "avgLatency": 6.58,
+      "maxLatency": 12.05
+    },
+    {
+      "name": "transferCustody",
+      "succ": 100,
+      "fail": 0,
+      "sendRate": 10.2,
+      "throughput": 7.9,
+      "avgLatency": 7,
+      "maxLatency": 12.04
+    },
+    {
+      "name": "flagRecall",
+      "succ": 50,
+      "fail": 0,
+      "sendRate": 10.4,
+      "throughput": 4,
+      "avgLatency": 8.68,
+      "maxLatency": 11.92
+    },
+    {
+      "name": "getBatchDetails",
+      "succ": 1000,
+      "fail": 0,
+      "sendRate": 100.2,
+      "throughput": 100.2,
+      "avgLatency": 0,
+      "maxLatency": 0.01
+    },
+    {
+      "name": "getCustodyHistory",
+      "succ": 1000,
+      "fail": 0,
+      "sendRate": 100.2,
+      "throughput": 100.2,
+      "avgLatency": 0,
+      "maxLatency": 0.08
+    },
+    {
+      "name": "acceptConsignment",
+      "succ": 100,
+      "fail": 0,
+      "sendRate": 10.2,
+      "throughput": 9,
+      "avgLatency": 6.16,
+      "maxLatency": 11.07
+    },
+    {
+      "name": "dispenseDrug",
+      "succ": 200,
+      "fail": 0,
+      "sendRate": 20.2,
+      "throughput": 15.7,
+      "avgLatency": 7.19,
+      "maxLatency": 12.27
+    }
+  ]
+}
