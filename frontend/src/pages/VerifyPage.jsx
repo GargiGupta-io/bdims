@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { deployments, NETWORKS, PUBLIC_CHAIN_ID, readProvider } from "../lib/config.js";
 import { allErrors, getContracts, queryAll } from "../lib/contracts.js";
 import { loadParticipants, makeNameOf } from "../lib/ledger.js";
 import { daysUntil, toDate, units } from "../lib/format.js";
 import { IPFS_GATEWAY } from "../lib/ipfs.js";
 import { Button, Card, inputClass } from "../components/ui.jsx";
+import { BatchQr, QrScanner } from "../components/qr.jsx";
 
 // Anyone can check a medicine here: no wallet, no account. A batch that a
 // licensed manufacturer never registered has no on-chain identity, so it
@@ -12,6 +13,7 @@ import { Button, Card, inputClass } from "../components/ui.jsx";
 export default function VerifyPage({ batchId }) {
   const [input, setInput] = useState(batchId ?? "");
   const [result, setResult] = useState(null);
+  const [scanning, setScanning] = useState(false);
   const deployment = deployments[PUBLIC_CHAIN_ID];
 
   useEffect(() => {
@@ -32,17 +34,26 @@ export default function VerifyPage({ batchId }) {
     else setResult({ invalid: true });
   };
 
+  const onScan = useCallback((id) => {
+    setScanning(false);
+    window.location.hash = `#/verify/${id}`;
+  }, []);
+
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-4 py-10 sm:px-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Verify a medicine</h1>
-        <p className="mt-1 text-slate-600">Enter the batch number printed on the pack. No wallet or account needed.</p>
+        <p className="mt-1 text-slate-600">Scan the QR code on the pack, or type its batch number. No wallet or account needed.</p>
       </div>
 
       <form onSubmit={submit} className="flex gap-2">
         <input className={inputClass} value={input} onChange={(e) => setInput(e.target.value)} placeholder="Batch number, e.g. 1" aria-label="Batch number" inputMode="numeric" />
         <Button type="submit">Verify</Button>
+        <Button type="button" variant="secondary" className="whitespace-nowrap" onClick={() => setScanning(true)}>
+          Scan QR
+        </Button>
       </form>
+      {scanning && <QrScanner onResult={onScan} onClose={() => setScanning(false)} />}
 
       {!deployment && <p className="text-sm text-rose-700">The contracts aren't deployed yet, so there's nothing to verify against.</p>}
       {result?.invalid && <p className="text-sm text-rose-700">A batch number is digits only.</p>}
@@ -124,6 +135,9 @@ function BatchReport({ r }) {
             </dd>
           </div>
         </dl>
+      </Card>
+      <Card title="QR code for this batch" subtitle="The code printed on every pack. Scanning it opens this page.">
+        <BatchQr batchId={b.batchId.toString()} drugName={b.drugName} size={160} />
       </Card>
       <Card title="Where it has been" subtitle="Every handoff, signed by the party that made it.">
         <ol className="relative space-y-4 border-l border-slate-200 pl-5">
