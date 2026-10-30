@@ -5,11 +5,13 @@ import { useTx } from "../hooks/useTx.js";
 import { dateInputToSeconds, toDate, todayInput, units } from "../lib/format.js";
 import { Badge, Button, Card, Field, Stat, TxStatus, inputClass } from "../components/ui.jsx";
 import { DispatchModal, InTransit, RecallModal, TrailModal } from "../components/batch.jsx";
+import { QrModal } from "../components/qr.jsx";
 import CertificateField from "../components/CertificateField.jsx";
 
 export default function ManufacturerDashboard({ wallet, profile }) {
   const ledger = useManufacturerLedger(wallet);
   const [dispatching, setDispatching] = useState(null);
+  const [qrFor, setQrFor] = useState(null);
   const [recalling, setRecalling] = useState(null);
   const [tracing, setTracing] = useState(null);
 
@@ -44,7 +46,7 @@ export default function ManufacturerDashboard({ wallet, profile }) {
         ) : ledger.batches.length === 0 ? (
           <p className="text-sm text-slate-500">No batches yet. Register your first one below.</p>
         ) : (
-          <BatchTable batches={ledger.batches} onDispatch={setDispatching} onRecall={setRecalling} onTrace={setTracing} />
+          <BatchTable batches={ledger.batches} onDispatch={setDispatching} onRecall={setRecalling} onTrace={setTracing} onQr={setQrFor} />
         )}
       </Card>
 
@@ -57,6 +59,7 @@ export default function ManufacturerDashboard({ wallet, profile }) {
         <DispatchModal batch={dispatching} participants={ledger.participants} supply={wallet.contracts.supply} self={wallet.address} onClose={() => setDispatching(null)} onDone={ledger.reload} />
       )}
       {recalling && <RecallModal batch={recalling} inventory={wallet.contracts.inventory} nameOf={nameOf} onClose={() => setRecalling(null)} onDone={ledger.reload} />}
+      {qrFor && <QrModal batch={qrFor} onClose={() => setQrFor(null)} />}
       {tracing && <TrailModal batch={tracing} supply={wallet.contracts.supply} nameOf={nameOf} onClose={() => setTracing(null)} />}
     </div>
   );
@@ -115,7 +118,7 @@ function RegisterBatch({ registry, onDone }) {
   );
 }
 
-function BatchTable({ batches, onDispatch, onRecall, onTrace }) {
+function BatchTable({ batches, onDispatch, onRecall, onTrace, onQr }) {
   return (
     <div className="-mx-5 -my-5 overflow-x-auto">
       <table className="w-full text-left text-sm">
@@ -150,6 +153,9 @@ function BatchTable({ batches, onDispatch, onRecall, onTrace }) {
                   <div className="flex justify-end gap-1.5">
                     <Button size="sm" variant="secondary" onClick={() => onTrace(b)}>
                       Trail
+                    </Button>
+                    <Button size="sm" variant="secondary" onClick={() => onQr(b)}>
+                      QR
                     </Button>
                     <Button size="sm" onClick={() => onDispatch(b)} disabled={status.frozen || b.stock === 0n}>
                       Dispatch
